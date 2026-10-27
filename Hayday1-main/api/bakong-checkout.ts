@@ -50,11 +50,11 @@ export default async function handler(req: any, res: any) {
     const allowedAmounts = set ? [Number(set.price), ...(set.priceMax !== undefined ? [Number(set.priceMax)] : [])] : [];
     if (!item || !set || !Number.isSafeInteger(amount) || !allowedAmounts.includes(amount) || amount < 1 || amount > 999999999) {
       return res.status(400).json({ error: "តម្លៃ ឬ set មិនត្រឹមត្រូវ សូម refresh ទំព័រ" });
-    }
+    
     const itemName = String(item.name || "Hayday item").trim().slice(0, 50);
-
+    const merchantAccount = tlv("00", accountId);
     const billNumber = `HD${Date.now().toString(36).toUpperCase()}`.slice(0, 25);
-    const merchantAccount = tlv("00", "A000000677010111") + tlv("01", accountId);
+    const merchantAcc
     const additional = tlv("01", billNumber) + tlv("02", buyerId.slice(0, 25));
     let qr = "";
     qr += tlv("00", "01");
