@@ -1,6 +1,6 @@
 declare const process: any;
 import { createHash } from "crypto";
-import defaultProducts from "../src/products.json";
+import defaultProducts from "../src/products.json" with { type: "json" };
 import { DB_URL, sql, ensureTables } from "./_db.js";
 
 function tlv(tag: string, value: string): string {
