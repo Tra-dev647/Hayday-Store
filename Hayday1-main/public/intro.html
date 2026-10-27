@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Welcome</title>
+<style>
+:root{--btn:#ffcf33;--ink:#101a2e;--sheet:#16213a;--line:#2a3857}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Kantumruy Pro","Noto Sans Khmer",system-ui,sans-serif;color:#fff}
+video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover}
+.shade{position:fixed;left:0;right:0;bottom:0;height:35%;background:linear-gradient(transparent,rgba(0,0,0,.65));pointer-events:none}
+.dock{position:fixed;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
+button{font:inherit;cursor:pointer}
+.buy{padding:11px 34px;font-weight:700;font-size:1rem;background:var(--btn);color:var(--ink);border:0;border-radius:999px}
+.buy:focus-visible,.go:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.back{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none}
+.back.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:var(--sheet);border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:none}
+.sheet.on{display:block}
+h2{margin:0 0 12px;font-size:1.1rem}
+.opt{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin-bottom:8px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer}
+.opt.sel{border-color:var(--btn);background:rgba(255,207,51,.1)}
+.opt input{display:none}
+.opt b{color:var(--btn)}
+label.f{display:block;margin:12px 0 6px;font-size:.9rem;opacity:.85}
+input.t{width:100%;padding:12px 14px;font:inherit;color:#fff;background:#0e1730;border:1.5px solid var(--line);border-radius:12px}
+.go{width:100%;margin-top:14px;padding:14px;font-weight:700;font-size:1.05rem;background:var(--btn);color:var(--ink);border:0;border-radius:12px}
+.go:disabled{opacity:.6}
+.err{color:#ff8d8d;min-height:1.2em;margin:8px 0 0;font-size:.9rem}
+.x{position:absolute;right:12px;top:10px;background:none;border:0;color:#fff;font-size:1.6rem}
+.done{text-align:center}
+.done a{display:block;margin-top:14px;padding:14px;font-weight:700;background:#2aabee;color:#fff;border-radius:12px;text-decoration:none}
+</style>
+</head>
+<body>
+<video src="/header_400.mp4" autoplay muted loop playsinline></video>
+<div class="shade"></div>
+<div class="dock"><button class="buy" id="buyBtn">Buy now</button></div>
+
+<div class="back" id="back"></div>
+
+<div class="sheet" id="order" role="dialog" aria-label="Order">
+  <button class="x" id="close" aria-label="Close">×</button>
+  <h2>រើស Set</h2>
+  <div id="sets"></div>
+  <label class="f" for="gid">Game ID</label>
+  <input class="t" id="gid" placeholder="#ABC123" autocomplete="off" maxlength="30">
+  <p class="err" id="err"></p>
+  <button class="go" id="go">ទិញ</button>
+</div>
+
+<div class="sheet done" id="result" role="dialog" aria-live="polite">
+  <h2 id="rTitle">កំពុងពិនិត្យការបង់ប្រាក់...</h2>
+  <p id="rMsg"></p>
+  <div id="rAct"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let sets=[],sel=null;
+const open=el=>{$("back").classList.add("on");el.classList.add("on")};
+const shut=()=>{$("back").classList.remove("on");$("order").classList.remove("on")};
+
+async function loadSets(){
+  try{
+    const r=await fetch("/api/khpay-checkout");sets=(await r.json()).sets||[];
+  }catch(e){sets=[]}
+  const box=$("sets");box.textContent="";
+  sets.forEach(s=>{
+    const l=document.createElement("label");l.className="opt";
+    const i=document.createElement("input");i.type="radio";i.name="set";i.value=s.id;
+    const n=document.createElement("span");n.textContent=s.name;
+    const p=document.createElement("b");p.textContent="$"+s.price;
+    l.append(i,n,p);
+    l.onclick=()=>{sel=s;[...box.children].forEach(c=>c.classList.remove("sel"));l.classList.add("sel");$("go").textContent="ទិញ $"+s.price};
+    box.append(l);
+  });
+}
+
+$("buyBtn").onclick=()=>{$("err").textContent="";open($("order"))};
+$("close").onclick=shut;$("back").onclick=shut;
+
+$("go").onclick=async()=>{
+  const gameId=$("gid").value.trim();
+  if(!sel){$("err").textContent="សូមរើស Set";return}
+  if(!gameId){$("err").textContent="សូមដាក់ Game ID";return}
+  $("go").disabled=true;$("err").textContent="";
+  try{
+    const r=await fetch("/api/khpay-checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({setId:sel.id,gameId})});
+    const j=await r.json();
+    if(!r.ok||!j.payment_url)throw new Error(j.error||"error");
+    location.href=j.payment_url;
+  }catch(e){$("err").textContent=e.message||"មានបញ្ហា សូមព្យាយាមម្តងទៀត";$("go").disabled=false}
+};
+
+// ត្រឡប់ពីទំព័របង់ប្រាក់
+const q=new URLSearchParams(location.search);
+const txn=q.get("transaction_id");
+if(txn&&q.get("status")==="paid"){
+  open($("result"));
+  let tries=0;
+  const poll=async()=>{
+    tries++;
+    try{
+      const r=await fetch("/api/khpay-verify?txn="+encodeURIComponent(txn));
+      const j=await r.json();
+      if(j.paid){
+        $("rTitle").textContent="បង់ប្រាក់ជោគជ័យ ✅";
+        $("rMsg").textContent=(j.set||"")+" · "+(j.game_id||"");
+        if(j.telegram){
+          const a=document.createElement("a");a.href=j.telegram;a.textContent="ចូល Telegram channel";$("rAct").append(a);
+        }else{$("rMsg").textContent+=" — សូមទាក់ទងអ្នកលក់ដើម្បីចូល channel"}
+        history.replaceState(null,"","/intro.html");
+        return;
+      }
+    }catch(e){}
+    if(tries<40)setTimeout(poll,3000);
+    else{$("rTitle").textContent="មិនទាន់ឃើញការបង់ប្រាក់";$("rMsg").textContent="បើអ្នកបានបង់ហើយ សូមរង់ចាំបន្តិច រួចផ្ទុកទំព័រឡើងវិញ"}
+  };
+  poll();
+}
+loadSets();
+</script>
+</body>
+</html>

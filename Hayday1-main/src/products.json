@@ -1,0 +1,157 @@
+[
+  {
+    "id": 1,
+    "name": "Bem, Lem, Sem",
+    "desc": "1set = 700៛, 7set = 4800៛, 30set = 20000៛",
+    "oldPrice": "1000៛",
+    "img": "https://i.ibb.co/zWxymcq8/photo-2026-09-09-15-08-06.jpg",
+    "sets": [
+      {
+        "qty": 1,
+        "price": 700
+      },
+      {
+        "qty": 2,
+        "price": 1400
+      },
+      {
+        "qty": 3,
+        "price": 2100
+      },
+      {
+        "qty": 4,
+        "price": 2800
+      },
+      {
+        "qty": 5,
+        "price": 3500
+      },
+      {
+        "qty": 6,
+        "price": 4200
+      },
+      {
+        "qty": 7,
+        "price": 4800
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "TNT, Saw, Axe, Shovel",
+    "desc": "គ្រាប់បែក 100💣 = 200៛, រណា 100🪚 = 300៛, ពែល 100🪏 = 300៛, ពូថៅ 100🪓 = 300៛",
+    "oldPrice": null,
+    "img": "https://i.ibb.co/1fgQywJy/photo-2026-09-13-09-19-11.jpg",
+    "sets": [
+      {
+        "qty": 1,
+        "price": 200,
+        "priceMax": 300
+      },
+      {
+        "qty": 2,
+        "price": 400,
+        "priceMax": 600
+      },
+      {
+        "qty": 3,
+        "price": 600,
+        "priceMax": 900
+      },
+      {
+        "qty": 4,
+        "price": 800,
+        "priceMax": 1200
+      },
+      {
+        "qty": 5,
+        "price": 1000,
+        "priceMax": 1500
+      },
+      {
+        "qty": 6,
+        "price": 1200,
+        "priceMax": 1800
+      },
+      {
+        "qty": 7,
+        "price": 1400,
+        "priceMax": 2100
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Lobster🦞, Duck Feather🪽",
+    "desc": "កសិដ្ឋានពេញលេញ",
+    "oldPrice": null,
+    "img": "https://i.ibb.co/XkjbmW4Y/photo-2026-09-13-22-03-47.jpg",
+    "sets": [
+      {
+        "qty": 1,
+        "price": 1000
+      },
+      {
+        "qty": 2,
+        "price": 2000
+      },
+      {
+        "qty": 3,
+        "price": 3000
+      },
+      {
+        "qty": 4,
+        "price": 4000
+      },
+      {
+        "qty": 5,
+        "price": 5000
+      },
+      {
+        "qty": 6,
+        "price": 6000
+      },
+      {
+        "qty": 7,
+        "price": 7000
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Jam Group 🍓🍑",
+    "desc": "Strawberry Jam, Peach Jam, Blueberry Jam, Raspberry Jam, Blackberry Jam, Cherry Jam, Apricot Jam, Plum Jam, Grape Jam, Mango Jam",
+    "oldPrice": null,
+    "img": "https://i.ibb.co/YFdbPhfg/photo-2026-09-14-05-54-37.jpg",
+    "sets": [
+      {
+        "qty": 1,
+        "price": 1000
+      },
+      {
+        "qty": 2,
+        "price": 2000
+      },
+      {
+        "qty": 3,
+        "price": 3000
+      },
+      {
+        "qty": 4,
+        "price": 4000
+      },
+      {
+        "qty": 5,
+        "price": 5000
+      },
+      {
+        "qty": 6,
+        "price": 6000
+      },
+      {
+        "qty": 7,
+        "price": 7000
+      }
+    ]
+  }
+]
