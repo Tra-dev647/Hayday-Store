@@ -74,7 +74,9 @@ export default async function handler(req: any, res: any) {
     await ensureTables();
     await sql("INSERT INTO kv (k, v) VALUES ($1, $2)", [`bakong_order_${billNumber}`, JSON.stringify({ md5, amount, buyerId, itemId, qty, createdAt: Date.now() })]);
     return res.status(200).json({ qr, md5, amount, billNumber, itemName, qty });
-  } catch {
-    return res.status(500).json({ error: "Server error while generating KHQR" });
+  } catch (error: any) {
+    // Keep the detailed cause in Vercel Function Logs; do not expose secrets to the browser.
+    console.error("[bakong-checkout] Failed to create KHQR:", error?.stack || error?.message || error);
+    return res.status(500).json({ error: "Server error while generating KHQR. Check Vercel Function Logs." });
   }
 }
