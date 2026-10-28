@@ -34,7 +34,7 @@ export default async function handler(req: any, res: any) {
     try { result = JSON.parse(raw); } catch { /* not JSON (e.g. blocked by firewall) */ }
     const data = result?.data;
     const verified = r.ok && (result?.responseCode === 0 || result?.responseCode === "0") && data &&
-      (!data.currency || String(data.currency) === "116") &&
+      (!data.currency || ["KHR", "116"].includes(String(data.currency).toUpperCase())) &&
       Number(data.amount) === expectedAmount;
     if (!verified) {
       console.error("[bakong-verify] not verified:", r.status, raw.slice(0, 300));
