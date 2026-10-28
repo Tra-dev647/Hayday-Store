@@ -50,12 +50,13 @@ export default async function handler(req: any, res: any) {
     const allowedAmounts = set ? [Number(set.price), ...(set.priceMax !== undefined ? [Number(set.priceMax)] : [])] : [];
     if (!item || !set || !Number.isSafeInteger(amount) || !allowedAmounts.includes(amount) || amount < 1 || amount > 999999999) {
       return res.status(400).json({ error: "តម្លៃ ឬ set មិនត្រឹមត្រូវ សូម refresh ទំព័រ" });
-    
+    }
     const itemName = String(item.name || "Hayday item").trim().slice(0, 50);
     const merchantAccount = tlv("00", accountId);
     const billNumber = `HD${Date.now().toString(36).toUpperCase()}`.slice(0, 25);
-    const merchantAcc
-    const additional = tlv("01", billNumber) + tlv("02", buyerId.slice(0, 25));
+    const additional = tlv("01", billNumber);
+    const now = Date.now();
+    const timestamp = tlv("00", String(now)) + tlv("01", String(now + 15 * 60 * 1000));
     let qr = "";
     qr += tlv("00", "01");
     qr += tlv("01", "12");
@@ -67,6 +68,7 @@ export default async function handler(req: any, res: any) {
     qr += tlv("59", merchantName);
     qr += tlv("60", merchantCity);
     qr += tlv("62", additional);
+    qr += tlv("99", timestamp);
     qr += "6304";
     qr += crc16(qr);
     const md5 = createHash("md5").update(qr, "utf8").digest("hex");
