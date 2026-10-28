@@ -74,7 +74,7 @@ export default async function handler(req: any, res: any) {
     const md5 = createHash("md5").update(qr, "utf8").digest("hex");
     if (!DB_URL) return res.status(503).json({ error: "Admin ត្រូវកំណត់ DATABASE_URL ក្នុង Vercel ដើម្បីរក្សាទុក និងផ្ទៀងផ្ទាត់ការបញ្ជាទិញ" });
     await ensureTables();
-    await sql("INSERT INTO kv (k, v) VALUES ($1, $2)", [`bakong_order_${billNumber}`, JSON.stringify({ md5, amount, buyerId, itemId, qty, createdAt: Date.now() })]);
+    await sql("INSERT INTO kv (k, v) VALUES ($1, $2)", [`bakong_order_${billNumber}`, JSON.stringify({ md5, amount, buyerId, itemId, itemName, qty, createdAt: Date.now() })]);
     return res.status(200).json({ qr, md5, amount, billNumber, itemName, qty });
   } catch (error: any) {
     // Keep the detailed cause in Vercel Function Logs; do not expose secrets to the browser.

@@ -29,12 +29,19 @@ export default async function handler(req: any, res: any) {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ md5 }),
     });
-    const result = await r.json().catch(() => ({}));
+    const raw = await r.text();
+    let result: any = {};
+    try { result = JSON.parse(raw); } catch { /* not JSON (e.g. blocked by firewall) */ }
     const data = result?.data;
     const verified = r.ok && (result?.responseCode === 0 || result?.responseCode === "0") && data &&
       (!data.currency || String(data.currency) === "116") &&
       Number(data.amount) === expectedAmount;
-    if (!verified) return res.status(200).json({ paid: false, message: "មិនទាន់រកឃើញការបង់ប្រាក់ដែលបានផ្ទៀងផ្ទាត់ទេ" });
+    if (!verified) {
+      console.error("[bakong-verify] not verified:", r.status, raw.slice(0, 300));
+      // TEMP DEBUG: shows why Bakong did not confirm. Remove once payment verification works.
+      const debug = `HTTP ${r.status} | code ${result?.responseCode ?? "-"} | ${String(result?.responseMessage || raw.slice(0, 80)).replace(/\s+/g, " ")} | amount ${data?.amount ?? "-"} | currency ${data?.currency ?? "-"}`;
+      return res.status(200).json({ paid: false, message: `មិនទាន់រកឃើញការបង់ប្រាក់ដែលបានផ្ទៀងផ្ទាត់ទេ [${debug}]` });
+    }
 
     // Claim this bill first so the Telegram message is sent only once.
     const key = `bakong_paid_${billNumber}`;
