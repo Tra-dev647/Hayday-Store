@@ -153,5 +153,42 @@
         "price": 7000
       }
     ]
+  },
+  {
+    "id": 5,
+    "name": "មាស 🪙",
+    "desc": "មាស",
+    "oldPrice": null,
+    "img": "https://cdn-icons-png.flaticon.com/512/679/679720.png",
+    "sets": [
+      {
+        "qty": 1,
+        "price": 100
+      },
+      {
+        "qty": 2,
+        "price": 200
+      },
+      {
+        "qty": 3,
+        "price": 300
+      },
+      {
+        "qty": 4,
+        "price": 400
+      },
+      {
+        "qty": 5,
+        "price": 500
+      },
+      {
+        "qty": 6,
+        "price": 600
+      },
+      {
+        "qty": 7,
+        "price": 700
+      }
+    ]
   }
 ]
