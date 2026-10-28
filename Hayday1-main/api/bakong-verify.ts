@@ -36,31 +36,34 @@ export default async function handler(req: any, res: any) {
       Number(data.amount) === expectedAmount;
     if (!verified) return res.status(200).json({ paid: false, message: "មិនទាន់រកឃើញការបង់ប្រាក់ដែលបានផ្ទៀងផ្ទាត់ទេ" });
 
-    // Do not issue duplicate access links for the same bill.
-    if (DB_URL) {
-      await ensureTables();
-      const key = `bakong_paid_${billNumber}`;
-      const existing = await sql("SELECT v FROM kv WHERE k = $1", [key]);
-      if (existing[0]?.v) return res.status(200).json({ paid: true, telegram: existing[0].v, alreadyProcessed: true });
-    }
+    // Claim this bill first so the Telegram message is sent only once.
+    const key = `bakong_paid_${billNumber}`;
+    const claim = await sql("INSERT INTO kv (k, v) VALUES ($1, $2) ON CONFLICT (k) DO NOTHING RETURNING k", [key, "sent"]);
+    if (!claim.length) return res.status(200).json({ paid: true, alreadyProcessed: true });
 
     const botToken = String(process.env.TELEGRAM_BOT_TOKEN || "").trim();
     const channelId = String(process.env.TELEGRAM_CHAT_ID || "-1004442443281").trim();
-    if (!botToken) return res.status(503).json({ error: "Admin ត្រូវកំណត់ TELEGRAM_BOT_TOKEN ជាមុនសិន" });
-    const inviteResponse = await fetch(`https://api.telegram.org/bot${botToken}/createChatInviteLink`, {
+    if (!botToken) {
+      await sql("DELETE FROM kv WHERE k = $1", [key]);
+      return res.status(503).json({ error: "Admin ត្រូវកំណត់ TELEGRAM_BOT_TOKEN ជាមុនសិន" });
+    }
+    const text = [
+      "✅ បង់ប្រាក់ជោគជ័យ (Bakong KHQR)",
+      `🧾 លេខបញ្ជាទិញ: ${billNumber}`,
+      `🛒 ទំនិញ: ${order.itemName || order.itemId} · ${order.qty} set`,
+      `💰 ចំនួនទឹកប្រាក់: ${expectedAmount.toLocaleString("en-US")} ៛`,
+      `👤 ID អ្នកទិញ: ${buyerId}`,
+    ].join("\n");
+    const sendResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: channelId, member_limit: 1, expire_date: Math.floor(Date.now() / 1000) + 3600, name: billNumber }),
+      body: JSON.stringify({ chat_id: channelId, text }),
     });
-    const invite = await inviteResponse.json().catch(() => ({}));
-    if (!invite?.ok || !invite?.result?.invite_link) {
-      return res.status(502).json({ error: "បានពិនិត្យការបង់ប្រាក់ ប៉ុន្តែមិនអាចបង្កើត Telegram invite បានទេ។ ពិនិត្យថា Bot ជា Admin ក្នុង Channel។" });
+    const sent = await sendResponse.json().catch(() => ({}));
+    if (!sent?.ok) {
+      await sql("DELETE FROM kv WHERE k = $1", [key]);
+      return res.status(502).json({ error: "បានពិនិត្យការបង់ប្រាក់ ប៉ុន្តែមិនអាចផ្ញើសារទៅ Telegram បានទេ។ ពិនិត្យ TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID និងថា Bot ជា Admin ក្នុង Channel។" });
     }
-    const link = String(invite.result.invite_link);
-    if (DB_URL) {
-      await ensureTables();
-      await sql("INSERT INTO kv (k, v) VALUES ($1, $2) ON CONFLICT (k) DO NOTHING", [`bakong_paid_${billNumber}`, link]);
-    }
-    return res.status(200).json({ paid: true, telegram: link });
+    return res.status(200).json({ paid: true });
   } catch (e) {
     return res.status(500).json({ error: "មានបញ្ហាក្នុងការផ្ទៀងផ្ទាត់ការបង់ប្រាក់" });
   }

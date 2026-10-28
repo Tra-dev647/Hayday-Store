@@ -55,7 +55,7 @@ export default function App() {
   const [payment, setPayment] = useState<{ qr: string; md5: string; amount: number; billNumber: string } | null>(null);
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [verifyMessage, setVerifyMessage] = useState("");
-  const [telegramInvite, setTelegramInvite] = useState("");
+  const [paid, setPaid] = useState(false);
 
   const startCheckout = (next: CheckoutSelection) => {
     setSelection(next);
@@ -64,7 +64,7 @@ export default function App() {
     setCheckoutError("");
     setPayment(null);
     setVerifyMessage("");
-    setTelegramInvite("");
+    setPaid(false);
   };
 
   const createPayment = async () => {
@@ -97,9 +97,9 @@ export default function App() {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || "មិនអាចផ្ទៀងផ្ទាត់ការបង់ប្រាក់បានទេ");
-      if (data.paid && data.telegram) {
-        setTelegramInvite(data.telegram);
-        setVerifyMessage("បានផ្ទៀងផ្ទាត់ការបង់ប្រាក់! ចុចប៊ូតុងខាងក្រោមដើម្បីចូល Channel។");
+      if (data.paid) {
+        setPaid(true);
+        setVerifyMessage("បានទទួលការបង់ប្រាក់ជោគជ័យ! យើងបានទទួលការបញ្ជាទិញរបស់អ្នកហើយ។");
       } else {
         setVerifyMessage(data.message || "មិនទាន់ឃើញការបង់ប្រាក់ទេ។ សូមរង់ចាំបន្តិច រួចចុចពិនិត្យម្តងទៀត។");
       }
@@ -121,7 +121,7 @@ export default function App() {
   // Automatically check the Bakong transaction while the QR checkout is open.
   // Once the official Bakong API confirms payment, redirect the buyer to the one-time Telegram invite.
   useEffect(() => {
-    if (!payment || telegramInvite) return;
+    if (!payment || paid) return;
     let stopped = false;
     let checking = false;
     const checkPaid = async () => {
@@ -135,12 +135,11 @@ export default function App() {
         });
         const data = await r.json().catch(() => ({}));
         if (stopped) return;
-        if (r.ok && data.paid && data.telegram) {
-          setTelegramInvite(data.telegram);
-          setVerifyMessage("បានទទួលការបង់ប្រាក់! កំពុងបើក Telegram Channel…");
-          window.location.assign(data.telegram);
+        if (r.ok && data.paid) {
+          setPaid(true);
+          setVerifyMessage("បានទទួលការបង់ប្រាក់ជោគជ័យ! យើងបានទទួលការបញ្ជាទិញរបស់អ្នកហើយ។");
         } else if (r.ok) {
-          setVerifyMessage("កំពុងរង់ចាំការបង់ប្រាក់… បន្ទាប់ពីបង់រួច ប្រព័ន្ធនឹងបើក Telegram ដោយស្វ័យប្រវត្តិ។");
+          setVerifyMessage("កំពុងរង់ចាំការបង់ប្រាក់… បន្ទាប់ពីបង់រួច ប្រព័ន្ធនឹងទទួលការបញ្ជាទិញដោយស្វ័យប្រវត្តិ។");
         }
       } catch {
         if (!stopped) setVerifyMessage("កំពុងពិនិត្យការបង់ប្រាក់ឡើងវិញដោយស្វ័យប្រវត្តិ…");
@@ -151,7 +150,7 @@ export default function App() {
     void checkPaid();
     const timer = window.setInterval(() => { void checkPaid(); }, 4000);
     return () => { stopped = true; window.clearInterval(timer); };
-  }, [payment, telegramInvite, buyerId]);
+  }, [payment, paid, buyerId]);
   useEffect(() => {
     const onHash = () => setRoute(window.location.hash);
     window.addEventListener("hashchange", onHash);
@@ -222,9 +221,9 @@ export default function App() {
               <>
                 <p className="checkout-total">សូមស្កេន QR ដើម្បីបង់ {payment.amount.toLocaleString()} ៛</p>
                 <img className="checkout-qr" alt="Bakong KHQR payment" src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(payment.qr)}`} />
-                <p className="checkout-hint">បើកកម្មវិធី Bakong ឬ Mobile Banking ដែលគាំទ្រ KHQR ហើយស្កេន QR នេះ។ បន្ទាប់ពីបង់ប្រាក់ជោគជ័យ ប្រព័ន្ធនឹងពិនិត្យដោយស្វ័យប្រវត្តិ ហើយបើក Telegram Channel។</p>
+                <p className="checkout-hint">បើកកម្មវិធី Bakong ឬ Mobile Banking ដែលគាំទ្រ KHQR ហើយស្កេន QR នេះ។ បន្ទាប់ពីបង់ប្រាក់ជោគជ័យ ប្រព័ន្ធនឹងពិនិត្យដោយស្វ័យប្រវត្តិ ហើយទទួលការបញ្ជាទិញរបស់អ្នក។</p>
                 <p className="checkout-hint">លេខបញ្ជាទិញ៖ {payment.billNumber}</p>
-                {!telegramInvite ? <button type="button" className="checkout-submit" onClick={verifyPayment} disabled={verifyBusy}>{verifyBusy ? "កំពុងពិនិត្យការបង់ប្រាក់…" : "ពិនិត្យការបង់ប្រាក់ឥឡូវនេះ"}</button> : <a className="checkout-submit" href={telegramInvite} target="_blank" rel="noreferrer">បើក Telegram Channel</a>}
+                {!paid ? <button type="button" className="checkout-submit" onClick={verifyPayment} disabled={verifyBusy}>{verifyBusy ? "កំពុងពិនិត្យការបង់ប្រាក់…" : "ពិនិត្យការបង់ប្រាក់ឥឡូវនេះ"}</button> : <p className="checkout-total">✅ បង់ប្រាក់ជោគជ័យ!</p>}
                 {verifyMessage && <p className="checkout-hint" role="status">{verifyMessage}</p>}
               </>
             )}
